@@ -195,14 +195,22 @@ class InformationWeightTransformer(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    prior_strength: float (optional, default=0.1)
+    prior_strength: float (optional, default=1e-4)
         How strongly to weight the prior when doing a Bayesian update to
         derive a model based on observed counts of a column.
 
-    approximate_prior: bool (optional, default=False)
+    approx_prior: bool (optional, default=True)
         Whether to approximate weights based on the Bayesian prior or perform
-        exact computations. Approximations are much faster especialyl for very
+        exact computations. Approximations are much faster, especially for very
         large or very sparse datasets.
+
+    supervision_weight: float (optional, default=0.95)
+        Controls weight given to labels in supervised information weight transformer.
+
+    weight_power: float (optional, default=2.0)
+        Controls power used with supervised information weight transformer.
+        
+
 
     Attributes
     ----------
@@ -233,6 +241,9 @@ class InformationWeightTransformer(BaseEstimator, TransformerMixin):
         X: ndarray of scipy sparse matrix of shape (n_samples, n_features)
             The count data to be trained on. Note that, as count data all
             entries should be positive or zero.
+
+        y: ndarray of of shape (n_samples,) (optional, default=None)
+            Target labels for supervised information weight transform.
 
         Returns
         -------
