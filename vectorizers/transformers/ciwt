@@ -1,0 +1,111 @@
+# REMINDER TO SELF: the "fit" method is going to learn the weights (which is most of the work). The "transform" method returns a new matrix.
+
+class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
+    """TBD. Describe workflow.
+
+    Parameters
+    ----------
+    prior_strength: float (optional, default=0.1)
+        How strongly to weight the prior when doing a Bayesian update to
+        derive a model based on observed counts of a column.
+
+    approx_prior: bool (optional, default=True)
+        Whether to approximate weights based on the Bayesian prior or perform
+        exact computations. Approximations are much faster especially for very
+        large or very sparse datasets.
+
+    Attributes
+    ----------
+
+    information_weights_: ndarray of shape (n_features,)
+        The learned weights to be applied to columns based on the amount
+        of information provided by the column.
+
+    kernels_: 
+    """
+
+    def __init__(
+        self,
+        prior_strength=1e-4,
+        approx_prior=True,
+        weight_power=2.0,
+        supervision_weight=0.95,
+    ):
+        self.prior_strength = prior_strength
+        self.approx_prior = approx_prior
+        self.weight_power = weight_power
+        self.supervision_weight = supervision_weight
+
+    def fit(self, X, y=None, **fit_kwds):
+        """Learn the appropriate column weighting as information weights
+        from the observed count data ``X``.
+
+        Parameters
+        ----------
+        X: ndarray of scipy sparse matrix of shape (n_samples, n_features)
+            The count data to be trained on. Note that, as count data all
+            entries should be positive or zero.
+
+        Returns
+        -------
+        self:
+            The trained model.
+        """
+        if not scipy.sparse.isspmatrix(X):
+            X = scipy.sparse.csc_matrix(X)
+
+        self.information_weights_ = information_weight(
+            X, self.prior_strength, self.approx_prior
+        )
+
+        if y is not None:
+            unsupervised_power = (1.0 - self.supervision_weight) * self.weight_power
+            supervised_power = self.supervision_weight * self.weight_power
+
+            self.information_weights_ /= np.mean(self.information_weights_)
+            self.information_weights_ = np.power(
+                self.information_weights_, unsupervised_power
+            )
+
+            target_classes = np.unique(y)
+            target_dict = dict(
+                np.vstack((target_classes, np.arange(target_classes.shape[0]))).T
+            )
+            target = np.array(
+                [np.int64(target_dict[label]) for label in y], dtype=np.int64
+            )
+            self.supervised_weights_ = information_weight(
+                X, self.prior_strength, self.approx_prior, target=target
+            )
+            self.supervised_weights_ /= np.mean(self.supervised_weights_)
+            self.supervised_weights_ = np.power(
+                self.supervised_weights_, supervised_power
+            )
+
+            self.information_weights_ = (
+                self.information_weights_ * self.supervised_weights_
+            )
+        else:
+            self.information_weights_ /= np.mean(self.information_weights_)
+            self.information_weights_ = np.power(
+                self.information_weights_, self.weight_power
+            )
+
+        return self
+
+    def transform(self, X):
+        """Reweight data ``X`` based on learned information weights of columns.
+
+        Parameters
+        ----------
+        X: ndarray of scipy sparse matrix of shape (n_samples, n_features)
+            The count data to be transformed. Note that, as count data all
+            entries should be positive or zero.
+
+        Returns
+        -------
+        result: ndarray of scipy sparse matrix of shape (n_samples, n_features)
+            The reweighted data.
+        """
+        result = X @ scipy.sparse.diags(self.information_weights_)
+        return result
