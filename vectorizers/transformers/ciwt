@@ -241,6 +241,9 @@ class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
         if not scipy.sparse.isspmatrix(data):
             data = scipy.sparse.csc_matrix(data)
 
+        if method is 'stump':
+            return self
+
         if method is 'local_gaussian':
             # Check if we actually passed parameters
             if method_params is None:
