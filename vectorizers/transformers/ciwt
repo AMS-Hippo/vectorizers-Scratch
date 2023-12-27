@@ -146,18 +146,6 @@ def weight_lifter(sk_mat, kern_weights, eps = (0.1)**12):
             res[s] = 0
     return(res)
 
-#########################
-# make_weighted_ds_mat #
-#########################
-
-# Makes the weighted ds_mat, using weights from "weightlifter."
-
-def make_weighted_ds_mat(ds_mat,s_weights):
-    res = lil_matrix(ds_mat.shape)
-    for doc,sent in zip(*ds_mat.nonzero()):
-        res[doc,sent] = ds_mat[doc,sent]*s_weights[sent]
-    return(res.tocsr())
-
 ##############
 # do_cts_IWT #
 ##############
@@ -241,12 +229,13 @@ class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        ds_mat: ndarray of scipy sparse matrix of shape (n_samples, n_features)
-            The count data to be trained on. Note that, as count data all
-            entries should be positive or zero.
 
         data: ndarray of scipy sparse matrix of shape (n_features, n_dim)
             Each token counted by "ds_mat" is vectorized with the corresponding row of the matrix "data."
+
+        ds_mat: ndarray of scipy sparse matrix of shape (n_samples, n_features)
+            The count data to be trained on. Note that, as count data all
+            entries should be positive or zero.
 
         method: string (optional, default = 'local_gaussian')
             Name of the method for defining kernels. At the time of writing, only a default 'local_gaussian' method is implemented.
@@ -331,21 +320,23 @@ class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
 
         return self
 
-    # ZZX: Following method not edited. Should basically be a call to make_weighted_ds_mat, but the notation will change. TODO ASAP.
-
-    def transform(self, X):
-        """Reweight data ``X`` based on learned information weights of columns.
+    def transform(self, data, ds_mat):
+        """Reweight original count matrix ``ds_mat`` based on learned information weights of columns.
 
         Parameters
         ----------
-        X: ndarray of scipy sparse matrix of shape (n_samples, n_features)
-            The count data to be transformed. Note that, as count data all
+        data: ndarray of scipy sparse matrix of shape (n_features, n_dim)
+            Each token counted by "ds_mat" is vectorized with the corresponding row of the matrix "data."
+
+        ds_mat: ndarray of scipy sparse matrix of shape (n_samples, n_features)
+            The count data to be trained on. Note that, as count data all
             entries should be positive or zero.
+
 
         Returns
         -------
         result: ndarray of scipy sparse matrix of shape (n_samples, n_features)
             The reweighted data.
         """
-        result = X @ scipy.sparse.diags(self.information_weights_)
+        result = ds_mat @ scipy.sparse.diags(self.information_weights_)
         return result
