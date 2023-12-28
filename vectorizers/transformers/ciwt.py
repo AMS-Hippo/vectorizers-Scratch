@@ -150,9 +150,9 @@ def weight_lifter(sk_mat, kern_weights, eps = (0.1)**12):
             res[s] = 0
     return(res)
 
-##############
-# do_cts_IWT #
-##############
+#######################
+# get_cts_IWT_weights #
+#######################
 
 # Obtains weights for a document-sentence matrix and the final weighted matrix.
 # Parameters as above
@@ -166,8 +166,7 @@ def get_cts_IWT_weights(data,ds_mat,N=None,exp=25,metric='euclidean',max_k=40,c=
     else:
         k_weights = Simple_IWT(dk_mat, eps=eps)
     s_weights= weight_lifter(sk_mat, k_weights, eps = eps)
-    # The following is in the transform method, so I edit it out. TODO: Put it in the right spot, delete it here.
-    # weighted_ds_mat = make_weighted_ds_mat(ds_mat,s_weights)
+
     return((k_weights,s_weights))
 
 class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
