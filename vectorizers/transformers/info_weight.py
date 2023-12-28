@@ -178,8 +178,20 @@ def information_weight(data, prior_strength=0.1, approximate_prior=False, target
         target=target,
     )
     return weights
+    
+class dummy(BaseEstimator, TransformerMixin):
+     """Dummy class for basic testing. TODO: Delete this.
+     """
 
+    def __init__(
+        self,
+        foo = True,
+        bar = False,
+    ):
+        self.foo = foo
+        self.bar = bar
 
+     
 class InformationWeightTransformer(BaseEstimator, TransformerMixin):
     """A data transformer that re-weights columns of count data. Column weights
     are computed as information based weights for columns. The information weight
