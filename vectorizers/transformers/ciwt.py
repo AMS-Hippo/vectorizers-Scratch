@@ -21,6 +21,7 @@ from scipy.stats import norm
 # c=1.5: the smallest weight for each kernel will be about e^{-c^{2}}.
 # ensure_coverage = False: if true, will run again in batches until every sentence is covered with a kernel.
 # batch_size = 10: how large the batch size should be if ensure_coverage=True
+# pow = 2: decay rate for kernel. By default, pow=2 gives Gaussian kernels.
 
 # parallel_batch_queries = True: option for pynndescent
 # n_trees = 8: option for pynndescent
@@ -32,7 +33,7 @@ from scipy.stats import norm
 # neighbor_query: the query of nn_index for kernel targets. Note that neighbor_query[0][:,0] gives kernel centers
 # target_params: the precision value associated with each kernel. 
 
-def make_sk_mat(data,N=None,exp=25,metric='euclidean',max_k=40,c=1.5,ensure_coverage = False,batch_size = 10, n_trees=8, max_candidates=20,parallel_batch_queries = True):
+def make_sk_mat(data,N=None,exp=25,metric='euclidean',max_k=40,c=1.5,ensure_coverage = False,batch_size = 10, n_trees=8, max_candidates=20,parallel_batch_queries = True,pow=2):
     # Preliminary Calculations
     n = data.shape[0] 
     if N is None:
@@ -69,7 +70,7 @@ def make_sk_mat(data,N=None,exp=25,metric='euclidean',max_k=40,c=1.5,ensure_cove
                 for i in range(batch_size): # Loop over kernel centers
                     p = c/target_params[i]
                     for j in range(K): # Loop over sentences allowed to have nonzero values
-                        temp_mat[nn_inds[i,j],i] = np.exp(-(p*nn_dists[i,j])**2)
+                        temp_mat[nn_inds[i,j],i] = np.exp(-(p*nn_dists[i,j])**pow)
                 sk_mat = np.vstack(sk_mat,temp_mat)            
 
     return(sk_mat,nn_index,neighbor_query,target_params)
@@ -268,6 +269,7 @@ class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
                 max_candidates=20
                 parallel_batch_queries = True
                 eps=(0.1)**12
+                pow = 2
             else:
                 N=method_params['N']
                 exp=method_params['exp']
@@ -280,6 +282,7 @@ class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
                 max_candidates=method_params['max_candidates']
                 parallel_batch_queries = method_params['parallel_batch_queries']
                 eps = method_params['eps']
+                pow = method_params['pow']
 
     # Get kernel weights and sentence weights (the latter is what we normally call information weights).
             self.k_weights, self.information_weights = get_cts_IWT_weights{
