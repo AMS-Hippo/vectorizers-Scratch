@@ -170,8 +170,80 @@ def get_cts_IWT_weights(data,ds_mat,N=None,exp=25,metric='euclidean',max_k=40,c=
 
     return((k_weights,s_weights))
 
+######################################
+# Helper: read_local_gaussian_params #
+######################################
+
+# Expands the parameters when using read_local_gaussian_params
+
+def read_local_gaussian_params(method_params):
+    if method_params is None:
+        N = None
+        exp=30
+        metric='euclidean'
+        max_k=40
+        c=1.5
+        ensure_coverage = False
+        batch_size = 10
+        n_trees=8
+        max_candidates=20
+        parallel_batch_queries = True
+        eps=(0.1)**12
+        pow = 2
+    else:
+        if 'N' in method_params.keys():
+            N=method_params['N']
+        else:
+            N = None
+        if 'exp' in method_params.keys():
+            exp=method_params['exp']
+        else:
+            exp = 30        
+        if 'metric' in method_params.keys():
+            metric=method_params['metric']
+        else:
+            metric = 'euclidean'
+        if 'max_k' in method_params.keys():
+            max_k=method_params['max_k']
+        else:
+            max_k=40
+        if 'c' in method_params.keys():
+            c=method_params['c']
+        else:
+            c=1.5
+        if 'ensure_coverage' in method_params.keys():
+            ensure_coverage=method_params['ensure_coverage']
+        else:
+            ensure_coverage = False
+        if 'batch_size' in method_params.keys():
+            batch_size=method_params['batch_size']
+        else:
+            batch_size = 10
+        if 'n_trees' in method_params.keys():
+            n_trees=method_params['n_trees']
+        else:
+            n_trees=8
+        if 'max_candidates' in method_params.keys():
+            max_candidates=method_params['max_candidates']
+        else:
+            max_candidates=20
+        if 'parallel_batch_queries' in method_params.keys():
+            parallel_batch_queries=method_params['parallel_batch_queries']
+        else:
+            parallel_batch_queries = True
+        if 'eps' in method_params.keys():
+            eps=method_params['eps']
+        else:
+            eps =(0.1)**12
+        if 'pow' in method_params.keys():
+            pow=method_params['pow']
+        else:
+            pow = 2
+    return N, exp, metric, max_k, c, ensure_coverage, batch_size, n_trees, max_candidates, parallel_batch_queries, eps, pow
+
 class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
     """TBD. Describe workflow.
+    TODO: Currently have "Gaussian PDF"-based kernels. Add "Gaussian CDF"-based kernels (i.e. many weights close to 1).
 
     Parameters
     ----------
@@ -256,37 +328,11 @@ class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
             return self
 
         if method is 'local_gaussian':
-            # Check if we actually passed parameters
-            if method_params is None:
-                N = None
-                exp=25
-                metric='euclidean'
-                max_k=40
-                c=1.5
-                ensure_coverage = False
-                batch_size = 10
-                n_trees=8
-                max_candidates=20
-                parallel_batch_queries = True
-                eps=(0.1)**12
-                pow = 2
-            else:
-                N=method_params['N']
-                exp=method_params['exp']
-                metric=method_params['metric']
-                max_k=method_params['max_k']
-                c=method_params['c']
-                ensure_coverage = method_params['ensure_coverage']
-                batch_size = method_params['batch_size']
-                n_trees= method_params['n_trees']
-                max_candidates=method_params['max_candidates']
-                parallel_batch_queries = method_params['parallel_batch_queries']
-                eps = method_params['eps']
-                pow = method_params['pow']
-
-    # Get kernel weights and sentence weights (the latter is what we normally call information weights).
+            N, exp, metric, max_k, c, ensure_coverage, batch_size, n_trees, max_candidates, parallel_batch_queries, eps, pow = read_local_gaussian_params(method_params)
+            
+            # Get kernel weights and sentence weights (the latter is what we normally call information weights).
             self.k_weights, self.information_weights = get_cts_IWT_weights{
-                data,ds_mat,N=N,exp=exp,metric=metric,max_k=max_k,c=c,ensure_coverage = ensure_coverage,batch_size = batch_size, n_trees=n_trees, max_candidates=max_candidates,parallel_batch_queries = parallel_batch_queries,eps=eps,simple_IWT=self.simple_IWT)
+                data,ds_mat,N=N,exp=exp,metric=metric,max_k=max_k,c=c,ensure_coverage = ensure_coverage,batch_size = batch_size, n_trees=n_trees, max_candidates=max_candidates,parallel_batch_queries = parallel_batch_queries,eps=eps,simple_IWT=self.simple_IWT, pow=pow)
             }
 
     # TODO: Check to see if the following actually makes sense. For now, I'm not using the branch where y is not None.
