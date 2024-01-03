@@ -331,9 +331,9 @@ class ContinuousInformationWeightTransformer(BaseEstimator, TransformerMixin):
             N, exp, metric, max_k, c, ensure_coverage, batch_size, n_trees, max_candidates, parallel_batch_queries, eps, pow = read_local_gaussian_params(method_params)
             
             # Get kernel weights and sentence weights (the latter is what we normally call information weights).
-            self.k_weights, self.information_weights = get_cts_IWT_weights{
+            self.k_weights, self.information_weights = get_cts_IWT_weights(
                 data,ds_mat,N=N,exp=exp,metric=metric,max_k=max_k,c=c,ensure_coverage = ensure_coverage,batch_size = batch_size, n_trees=n_trees, max_candidates=max_candidates,parallel_batch_queries = parallel_batch_queries,eps=eps,simple_IWT=self.simple_IWT, pow=pow)
-            }
+            )
 
     # TODO: Check to see if the following actually makes sense. For now, I'm not using the branch where y is not None.
 
