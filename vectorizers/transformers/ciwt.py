@@ -8,6 +8,7 @@ import scipy.sparse
 from scipy.sparse import csc_array
 from scipy.sparse import lil_matrix
 from scipy.stats import norm
+from sklearn.base import BaseEstimator, TransformerMixin
 
 ###############
 # make_sk_mat #
