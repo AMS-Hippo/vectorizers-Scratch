@@ -100,7 +100,7 @@ def column_weights(
 ):
     n_cols = indptr.shape[0] - 1
     weights = np.ones(n_cols)
-    for i in range(n_cols):
+    for i in numba.prange(n_cols):
         weights[i] = column_kl_divergence_func(
             indices[indptr[i] : indptr[i + 1]],
             data[indptr[i] : indptr[i + 1]],
@@ -274,6 +274,7 @@ class InformationWeightTransformer(BaseEstimator, TransformerMixin):
             supervised_power = self.supervision_weight * self.weight_power
 
             self.information_weights_ /= np.mean(self.information_weights_)
+            self.information_weights_ = np.maximum(self.information_weights_, 0.0)
             self.information_weights_ = np.power(
                 self.information_weights_, unsupervised_power
             )
@@ -289,6 +290,7 @@ class InformationWeightTransformer(BaseEstimator, TransformerMixin):
                 X, self.prior_strength, self.approx_prior, target=target
             )
             self.supervised_weights_ /= np.mean(self.supervised_weights_)
+            self.supervised_weights_ = np.maximum(self.supervised_weights_, 0.0)
             self.supervised_weights_ = np.power(
                 self.supervised_weights_, supervised_power
             )
@@ -298,6 +300,7 @@ class InformationWeightTransformer(BaseEstimator, TransformerMixin):
             )
         else:
             self.information_weights_ /= np.mean(self.information_weights_)
+            self.information_weights_ = np.maximum(self.information_weights_, 0.0)
             self.information_weights_ = np.power(
                 self.information_weights_, self.weight_power
             )
